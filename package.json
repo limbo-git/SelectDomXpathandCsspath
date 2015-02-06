@@ -1,0 +1,9 @@
+{
+	"name" : "Lesson1",
+	"main" : "lesson1.html",
+	"version" : "v0.1",
+	"window" : {
+		"toolbar" : false,
+		"position": "center"
+	}
+}

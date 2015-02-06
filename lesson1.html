@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Lesson</title>
+</head>
+<body>
+	<div id = "header">
+			URL
+        <from>
+			<input type="text" id="url_text" />
+			<input type="button" onclick="onjump()" value="jump" />
+        </from>
+	</div>
+	<div id = "content" >
+	</div>
+	<script src="mouse.js"></script>
+    <script type="text/javascript">
+        function onCount(node) {
+        	//计算xpath和csspath时用
+            var bro = node.parentNode.childNodes;
+            if (bro.length == 1) {
+                return 1;
+            } else {
+                var c = 0;
+                for (var i = 0; i < bro.length; i++) {
+                    bro.item(i).number = 0;
+                    if (bro.item(i).nodeName == node.nodeName) {
+                        c++;
+                        bro.item(i).number = c;
+                    }
+                }
+                return c;
+            }
+        };
+        function traverseNodes(node){
+            //判断是否是元素节点
+            if(node.nodeType == 1){
+                if ((node.nodeName!="SCRIPT")
+                        && (node.nodeName != "META") && (node.nodeName != "LINK")) {                    
+                    if (node.nodeName == "HTML") {
+                        node.number = 0;
+                        node.xpath = "/HTML";
+                        node.Csspath = "html";
+                    } else {
+                        node.addEventListener("mouseover", function () {
+                            this.colorbuffer = this.style.backgroundColor;
+                            if (window.colorchanged == false) {
+                                this.style.backgroundColor = "blue";
+                                window.colorchanged = true;
+                            }
+                        });
+                        node.addEventListener("mouseout", function () {
+                            this.style.backgroundColor = this.colorbuffer;
+                        });
+                        node.addEventListener('contextmenu', function (ev) {
+                        	if (window.contexted === undefined) {
+                        		ev.preventDefault();
+                                menu.popup(ev.x, ev.y);
+                                window.selectNode = this;
+                                window.contexted = false;
+                        	} else {
+                        		if (window.contexted == true) {
+                                	ev.preventDefault();
+                                	menu.popup(ev.x, ev.y);
+                                	window.selectNode = this;
+                                	window.contexted = false;
+                            	}
+                        	}     
+                        });
+                        if (node.hasAttribute("id")) {
+                            node.xpath = '//*[@id="' + node.getAttribute("id") + '"]';
+                            node.Csspath = '#' + node.getAttribute("id");
+                        } else {
+                            var temp = onCount(node)
+                            if (temp != 1) {
+                                node.xpath = node.parentNode.xpath + "/" + node.nodeName + "[" + node.number + "]";
+                                node.Csspath = node.parentNode.Csspath + ">" + node.nodeName +
+                                    ':nth-child(' + node.number + ')';
+                            } else {
+                                node.xpath = node.parentNode.xpath + "/" + node.nodeName;
+                                node.Csspath = node.parentNode.Csspath + ">" + node.nodeName;
+                            }
+                            if (node.nodeName == "BODY") {
+                                node.Csspath = "body";
+                            }
+                            if (node.nodeName == "HEAD") {
+                                node.Csspath = "head";
+                            }
+                        }
+                    }                   
+                }
+                //判断该元素节点是否有子节点
+                if(node.hasChildNodes){
+                    //得到所有的子节点
+                    var sonnodes = node.childNodes;
+                    //遍历所哟的子节点
+                    for (var i = 0; i < sonnodes.length; i++) {
+                        //得到具体的某个子节点
+                        var sonnode = sonnodes.item(i);
+                        //递归遍历
+                        traverseNodes(sonnode);
+                    }
+                }
+            }
+        };
+        function onjump() {
+        	var patt1 = new RegExp('http://');
+        	var patt2 = new RegExp('file:///'); 
+            var url = document.getElementById("url_text").value;
+            var div_content = document.getElementById("content");
+            var dom_iframe = document.getElementById('page');
+            if ((patt1.test(url))||(patt2.test(url))){
+            	if (dom_iframe == undefined) {
+            		var iframe_page = document.createElement("iframe");
+            		iframe_page.id = "page";
+            		iframe_page.src = url;
+            		iframe_page.style.width = "100%";
+            		iframe_page.style.height = "700px";
+            		iframe_page.frameBorder = 0;
+            		div_content.appendChild(iframe_page);
+            	} else {
+            		div_content.removeChild(dom_iframe);
+            		var iframe_page = document.createElement("iframe");
+            		iframe_page.id = "page";
+            		iframe_page.src = url;
+            		iframe_page.style.width = "100%";
+            		iframe_page.style.height = "700px";
+            		iframe_page.frameBorder = 0;
+            		div_content.appendChild(iframe_page);
+            	}
+            	iframe_page.onload = function load() {
+                	var root = iframe_page.contentWindow.document.documentElement;
+                	iframe_page.contentWindow.contexted = true;
+                	iframe_page.contentWindow.colorchanged = false;
+                	iframe_page.contentWindow.selectNode = null;
+                	root.addEventListener("contextmenu", function() {
+                    	window.contexted = true;
+                	});
+                	root.addEventListener("mouseover", function() {
+                    	window.colorchanged = false;
+                	});
+                	traverseNodes(root);
+                	iframe_page.focus();
+            	};
+        	} else {
+        		alert("url is error");
+        	}
+        }
+    </script>
+</body>
+</html>
